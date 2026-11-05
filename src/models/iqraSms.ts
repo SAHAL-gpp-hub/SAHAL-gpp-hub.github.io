@@ -6,42 +6,42 @@ import { createContactShadowMesh } from '../scene/contactShadow.ts';
 
 function createReportCardTexture(title: string, badge: string, subtitle: string): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 160;
+  canvas.width = 320;
+  canvas.height = 190;
   const ctx = canvas.getContext('2d')!;
 
   // Background
-  ctx.fillStyle = 'rgba(16, 20, 36, 0.94)';
-  ctx.fillRect(0, 0, 256, 160);
+  ctx.fillStyle = 'rgba(14, 18, 34, 0.96)';
+  ctx.fillRect(0, 0, 320, 190);
 
   // Border in accent #ffc857
   ctx.strokeStyle = '#ffc857';
   ctx.lineWidth = 4;
-  ctx.strokeRect(6, 6, 244, 148);
+  ctx.strokeRect(6, 6, 308, 178);
 
   // Top header bar
-  ctx.fillStyle = 'rgba(255, 200, 87, 0.18)';
-  ctx.fillRect(6, 6, 244, 38);
+  ctx.fillStyle = 'rgba(255, 200, 87, 0.16)';
+  ctx.fillRect(6, 6, 308, 42);
 
   // Header text
   ctx.fillStyle = '#ffc857';
-  ctx.font = 'bold 15px sans-serif';
-  ctx.fillText(title, 18, 30);
+  ctx.font = 'bold 16px sans-serif';
+  ctx.fillText(title, 20, 33);
 
-  // Badge mark (e.g. "A+", "100%", "RBAC")
+  // Badge mark (e.g. "GRADE A+", "RBAC: FACULTY", "TOP 1%")
   ctx.fillStyle = '#ffc857';
-  ctx.font = 'bold 36px sans-serif';
-  ctx.fillText(badge, 18, 88);
+  ctx.font = 'bold 26px sans-serif';
+  ctx.fillText(badge, 20, 96);
 
   // Subtitle / metric
   ctx.fillStyle = '#eceef7';
-  ctx.font = '14px sans-serif';
-  ctx.fillText(subtitle, 18, 122);
+  ctx.font = '16px sans-serif';
+  ctx.fillText(subtitle, 20, 134);
 
   // Mock barcode / record ID
   ctx.fillStyle = '#8b90ab';
-  ctx.font = '11px monospace';
-  ctx.fillText('REC-2026-IQRA-SMS', 18, 142);
+  ctx.font = '12px monospace';
+  ctx.fillText('REC-2026-IQRA-SMS', 20, 162);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.LinearFilter;
@@ -56,8 +56,9 @@ export async function createIqraSmsModel(loader: GLTFLoader): Promise<ModelInsta
   const building = buildingGltf.scene;
   applyCohesionPass(building);
 
-  // Normalize building bounds FIRST
-  normalizeModelBounds(building, 2.2);
+  // Normalize building bounds FIRST and rotate to 3/4 architectural depth
+  normalizeModelBounds(building, 1.9);
+  building.rotation.y = -0.38;
   root.add(building);
 
   // 3 Orbiting report card planes
@@ -68,7 +69,9 @@ export async function createIqraSmsModel(loader: GLTFLoader): Promise<ModelInsta
   ];
 
   const cards: { mesh: THREE.Mesh; angleOffset: number; baseHeight: number }[] = [];
-  const cardGeo = new THREE.PlaneGeometry(0.72, 0.45);
+  const cardGeo = new THREE.PlaneGeometry(0.56, 0.34);
+
+  const orbitRadius = 0.95;
 
   cardsData.forEach((data, index) => {
     const tex = createReportCardTexture(data.title, data.badge, data.sub);
@@ -76,16 +79,20 @@ export async function createIqraSmsModel(loader: GLTFLoader): Promise<ModelInsta
       map: tex,
       transparent: true,
       opacity: 0.95,
-      side: THREE.DoubleSide
+      side: THREE.FrontSide
     });
 
     const cardMesh = new THREE.Mesh(cardGeo, cardMat);
+    const angle = (index * 2 * Math.PI) / 3;
+    const baseHeight = 0.72 + index * 0.40;
+    cardMesh.position.set(Math.cos(angle) * orbitRadius, baseHeight, Math.sin(angle) * orbitRadius);
+    cardMesh.lookAt(0, baseHeight, 4.75);
     root.add(cardMesh);
 
     cards.push({
       mesh: cardMesh,
-      angleOffset: (index * 2 * Math.PI) / 3,
-      baseHeight: 0.65 + index * 0.5
+      angleOffset: angle,
+      baseHeight
     });
   });
 
@@ -95,10 +102,8 @@ export async function createIqraSmsModel(loader: GLTFLoader): Promise<ModelInsta
   root.add(campusLight);
 
   // Contact shadow
-  const contactShadow = createContactShadowMesh(3.4, 0.85);
+  const contactShadow = createContactShadowMesh(3.2, 0.85);
   root.add(contactShadow);
-
-  const orbitRadius = 1.95;
 
   return {
     group: root,
@@ -111,22 +116,21 @@ export async function createIqraSmsModel(loader: GLTFLoader): Promise<ModelInsta
             card.baseHeight,
             Math.sin(angle) * orbitRadius
           );
-          card.mesh.rotation.y = -angle + Math.PI / 2;
+          card.mesh.lookAt(0, card.baseHeight, 4.75);
         });
         return;
       }
 
-      // Smooth orbital revolution around school building in clear perimeter
+      // Smooth orbital revolution around school building with cards always facing camera
       cards.forEach((card, idx) => {
-        const speed = 0.52;
+        const speed = 0.38;
         const currentAngle = elapsed * speed + card.angleOffset;
         const x = Math.cos(currentAngle) * orbitRadius;
         const z = Math.sin(currentAngle) * orbitRadius;
-        const y = card.baseHeight + Math.sin(elapsed * 1.8 + idx) * 0.08;
+        const y = card.baseHeight + Math.sin(elapsed * 1.5 + idx) * 0.05;
 
         card.mesh.position.set(x, y, z);
-        card.mesh.rotation.y = -currentAngle + Math.PI / 2;
-        card.mesh.rotation.x = Math.sin(elapsed * 1.4 + idx) * 0.05;
+        card.mesh.lookAt(0, y, 4.75);
       });
     }
   };

@@ -381,13 +381,19 @@ dialog#credits-dialog::backdrop {
 
 /* Mobile Layout (<860px) */
 @media (max-width: 860px) {
+  html, body {
+    overflow-y: auto;
+    height: auto;
+    min-height: 100vh;
+  }
+
   #app {
     display: flex;
     flex-direction: column;
     height: auto;
     min-height: 100vh;
     min-height: 100dvh;
-    overflow-y: auto;
+    overflow: visible;
   }
 
   .stage-panel {

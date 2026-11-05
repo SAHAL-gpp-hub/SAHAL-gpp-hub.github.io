@@ -16,6 +16,25 @@ export async function createLivingPlantModel(loader: GLTFLoader): Promise<ModelI
   normalizeModelBounds(plant, 2.1);
   root.add(plant);
 
+  // Upgrade pot and soil materials for rich contrast and visibility
+  const potMesh = plant.getObjectByName('Houseplant_1_1') as THREE.Mesh | undefined;
+  if (potMesh && potMesh.material) {
+    potMesh.material = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(0x2a3246), // Elegant slate ceramic pot
+      roughness: 0.45,
+      metalness: 0.18
+    });
+  }
+
+  const soilMesh = plant.getObjectByName('Houseplant_1_2') as THREE.Mesh | undefined;
+  if (soilMesh && soilMesh.material) {
+    soilMesh.material = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(0x382c22), // Natural potting soil
+      roughness: 0.88,
+      metalness: 0.04
+    });
+  }
+
   // Procedural ESP32 IoT Board clipped to the pot rim
   const esp32Group = new THREE.Group();
   esp32Group.name = 'ESP32Board';
@@ -66,21 +85,32 @@ export async function createLivingPlantModel(loader: GLTFLoader): Promise<ModelI
   });
 
   const probe1 = new THREE.Mesh(probeGeo, probeMat);
-  probe1.position.set(-0.04, -0.12, 0);
+  probe1.position.set(-0.035, -0.12, -0.06);
   esp32Group.add(probe1);
 
   const probe2 = new THREE.Mesh(probeGeo, probeMat);
-  probe2.position.set(0.04, -0.12, 0);
+  probe2.position.set(0.035, -0.12, -0.06);
   esp32Group.add(probe2);
 
-  // Mount ESP32 neatly on the rim of the pot with probes into soil
-  esp32Group.position.set(0.28, 0.45, 0.18);
-  esp32Group.rotation.set(-0.15, 0.35, 0.2);
+  // Pot rim mounting bracket
+  const bracketGeo = new THREE.BoxGeometry(0.12, 0.05, 0.06);
+  const bracketMat = new THREE.MeshStandardMaterial({
+    color: 0x252b3b,
+    roughness: 0.4,
+    metalness: 0.7
+  });
+  const bracket = new THREE.Mesh(bracketGeo, bracketMat);
+  bracket.position.set(0, -0.02, 0.08);
+  esp32Group.add(bracket);
+
+  // Mount ESP32 securely clipped on the pot rim with probes plunging into soil
+  esp32Group.position.set(-0.06, 0.745, 0.14);
+  esp32Group.rotation.set(-0.12, 0.55, -0.06);
   root.add(esp32Group);
 
   // Delicate Water Droplet hovering gracefully over the leaf canopy
   const dropletGroup = new THREE.Group();
-  const dropSphereGeo = new THREE.SphereGeometry(0.06, 24, 24);
+  const dropSphereGeo = new THREE.SphereGeometry(0.055, 24, 24);
   const dropMat = new THREE.MeshPhysicalMaterial({
     color: 0x7ddc8a,
     emissive: 0x2a5936,
@@ -92,13 +122,14 @@ export async function createLivingPlantModel(loader: GLTFLoader): Promise<ModelI
     opacity: 0.9
   });
   const dropMesh = new THREE.Mesh(dropSphereGeo, dropMat);
-  dropMesh.scale.set(1.0, 1.35, 1.0);
+  dropMesh.scale.set(1.0, 1.25, 1.0);
   dropletGroup.add(dropMesh);
 
   const dropLight = new THREE.PointLight(0x7ddc8a, 0.8, 0.8);
   dropletGroup.add(dropLight);
 
-  dropletGroup.position.set(0.15, 1.85, 0.15);
+  // Hovering in clear air above upper foliage canopy
+  dropletGroup.position.set(-0.02, 1.82, 0.12);
   root.add(dropletGroup);
 
   // Contact shadow

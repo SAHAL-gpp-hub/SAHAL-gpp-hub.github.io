@@ -46,6 +46,7 @@ import os
 import glob
 from PIL import Image
 import imageio
+import numpy as np
 
 frames_dir = '${framesDir}'
 files = sorted(glob.glob(os.path.join(frames_dir, 'frame_*.png')))
@@ -54,7 +55,7 @@ print(f'Processing {len(files)} frames for animated GIF and MP4...')
 # Load and optimize frames
 images = []
 for f in files:
-    im = Image.open(f).resize((720, 450), Image.Resampling.LANCZOS)
+    im = Image.open(f).resize((720, 450), Image.Resampling.LANCZOS).convert('RGB')
     images.append(im)
 
 out_assets = '/Users/mohammad/.gemini/antigravity/scratch/profile-repo/assets'
@@ -75,13 +76,16 @@ print('Saved GIF:', gif_path, 'Size:', os.path.getsize(gif_path), 'bytes')
 # 2. Save MP4
 mp4_path = os.path.join(out_assets, 'preview.mp4')
 try:
-    with imageio.get_writer(mp4_path, fps=7) as writer:
+    with imageio.get_writer(mp4_path, fps=7, format='mp4', codec='libx264') as writer:
         for im in images:
-            writer.append_data(imageio.imread(im.filename if hasattr(im, 'filename') and im.filename else files[0]))
+            writer.append_data(np.array(im))
     print('Saved MP4:', mp4_path, 'Size:', os.path.getsize(mp4_path), 'bytes')
 except Exception as e:
-    print('MP4 generation notice:', e)
-    # Fallback copy from ffmpeg or frames
+    print('MP4 generation with libx264:', e)
+    with imageio.get_writer(mp4_path, fps=7) as writer:
+        for im in images:
+            writer.append_data(np.array(im))
+    print('Saved MP4 (fallback):', mp4_path, 'Size:', os.path.getsize(mp4_path), 'bytes')
 `;
 
   fs.writeFileSync('temp_assemble.py', pythonScript);

@@ -39,6 +39,7 @@ function startServer(distDir, port) {
       const data = fs.readFileSync(filePath);
       res.writeHead(200, {
         'Content-Type': contentType,
+        'Content-Length': data.length,
         'Access-Control-Allow-Origin': '*'
       });
       res.end(data);
@@ -191,6 +192,14 @@ async function main() {
         // Wait for model loading and transition cross-fade to settle
         await vpPage.waitForTimeout(1800);
 
+        // Reset scroll position so stage is prominently captured across all viewports
+        await vpPage.evaluate(() => {
+          window.scrollTo(0, 0);
+          const app = document.getElementById('app');
+          if (app) app.scrollTop = 0;
+        });
+        await vpPage.waitForTimeout(300);
+
         const screenshotPath = path.join(outDir, `${vp.name}-${projId}.png`);
         await vpPage.screenshot({ path: screenshotPath, fullPage: false });
         console.log(`Saved screenshot: ${screenshotPath}`);
@@ -201,6 +210,9 @@ async function main() {
 
     console.log('\nAll QA verification tasks completed successfully!');
     console.log(`Total errors encountered: ${errors.length}`);
+    if (errors.length > 0) {
+      throw new Error(`QA failed with ${errors.length} console/page errors: ${errors.join('; ')}`);
+    }
   } finally {
     await browser.close();
     server.close();

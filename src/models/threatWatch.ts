@@ -49,6 +49,7 @@ const threatFragmentShader = `
   uniform vec3 uAccentColor;
   uniform vec3 uClusterColor;
   uniform float uTime;
+  uniform float uOpacity;
 
   varying float vIsOutlier;
   varying float vPhase;
@@ -74,7 +75,7 @@ const threatFragmentShader = `
       alpha *= 0.65;
     }
 
-    gl_FragColor = vec4(color, alpha);
+    gl_FragColor = vec4(color, alpha * uOpacity);
   }
 `;
 
@@ -99,7 +100,7 @@ export function createThreatWatchModel(): ModelInstance {
     // Box-Muller transform for normal distribution
     const u1 = Math.max(0.0001, Math.random());
     const u2 = Math.random();
-    const radius = Math.sqrt(-2.0 * Math.log(u1)) * 0.52;
+    const radius = Math.sqrt(-2.0 * Math.log(u1)) * 0.44;
     const theta = u2 * Math.PI * 2.0;
     const phi = (Math.random() - 0.5) * Math.PI;
 
@@ -112,11 +113,11 @@ export function createThreatWatchModel(): ModelInstance {
     sizes[i] = 3.5 + Math.random() * 3.5;
   }
 
-  // 2. Define 3 Prominent Outliers in Project Accent #ff6b81
+  // 2. Define 3 Prominent Outliers in Project Accent #ff6b81 (comfortably within camera view)
   const outlierCoords = [
-    [1.55, 1.45, 0.75],
-    [-1.45, 0.85, 1.1],
-    [0.35, 2.05, -1.25]
+    [0.78, 1.45, 0.45],
+    [-0.75, 0.95, 0.55],
+    [0.15, 1.82, -0.65]
   ];
 
   for (let j = 0; j < numOutliers; j++) {
@@ -144,6 +145,7 @@ export function createThreatWatchModel(): ModelInstance {
     fragmentShader: threatFragmentShader,
     uniforms: {
       uTime: { value: 0 },
+      uOpacity: { value: 1.0 },
       uPixelRatio: { value: pixelRatio },
       uAccentColor: { value: new THREE.Color(0xff6b81) },
       uClusterColor: { value: new THREE.Color(0x62739a) }

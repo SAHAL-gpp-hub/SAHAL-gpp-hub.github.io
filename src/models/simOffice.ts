@@ -5,20 +5,51 @@ import { applyCohesionPass, normalizeModelBounds } from '../scene/cohesion.ts';
 import { createContactShadowMesh } from '../scene/contactShadow.ts';
 
 function poseCharacterNatural(model: THREE.Object3D, isTyping = false): void {
-  const armL = model.getObjectByName('UpperArmL');
-  const armR = model.getObjectByName('UpperArmR');
-  const foreArmL = model.getObjectByName('LowerArmL');
-  const foreArmR = model.getObjectByName('LowerArmR');
+  const upperL = model.getObjectByName('UpperArmL');
+  const lowerL = model.getObjectByName('LowerArmL');
+  const upperR = model.getObjectByName('UpperArmR');
+  const lowerR = model.getObjectByName('LowerArmR');
+  const head = model.getObjectByName('Head');
 
-  if (armL && armR) {
-    // Fold arms down naturally along the body
-    armL.rotation.x -= 1.35;
-    armR.rotation.x -= 1.35;
+  if (isTyping) {
+    // Developer working/typing at workstation desk
+    if (upperL && upperR && lowerL && lowerR) {
+      // Rotate upper arms down along sides
+      upperL.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), 1.18);
+      upperR.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -1.18);
 
-    if (isTyping && foreArmL && foreArmR) {
-      // Bend elbows forward for natural typing posture
-      foreArmL.rotation.x += 0.85;
-      foreArmR.rotation.x += 0.85;
+      // Angle upper arms slightly forward towards desk
+      upperL.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), -0.45);
+      upperR.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), -0.45);
+
+      // Bend forearms forward towards keyboard
+      lowerL.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -0.92);
+      lowerR.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), 0.92);
+
+      // Angle hands symmetrically inward over the keyboard
+      lowerL.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), -0.55);
+      lowerR.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), -0.55);
+    }
+    if (head) {
+      head.rotation.x = 0.22;
+      head.rotation.y = 0.05;
+    }
+  } else {
+    // Technical lead standing naturally, reviewing screen telemetry
+    if (upperL && upperR && lowerL && lowerR) {
+      // Natural relaxed arm hang
+      upperL.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), 1.25);
+      upperR.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -1.25);
+
+      upperL.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), -0.15);
+      upperR.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), -0.15);
+
+      lowerL.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -0.25);
+      lowerR.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), 0.25);
+    }
+    if (head) {
+      head.rotation.x = 0.12;
+      head.rotation.y = -0.32;
     }
   }
 }
@@ -88,7 +119,7 @@ function createModernOfficeDesk(): THREE.Group {
   ctx1.lineTo(210, 75);
   ctx1.stroke();
   const screen1Tex = new THREE.CanvasTexture(canvas1);
-  const screen1Mat = new THREE.MeshBasicMaterial({ map: screen1Tex });
+  const screen1Mat = new THREE.MeshBasicMaterial({ map: screen1Tex, side: THREE.DoubleSide });
   const screen1 = new THREE.Mesh(new THREE.PlaneGeometry(0.64, 0.38), screen1Mat);
   screen1.position.z = 0.012;
   m1Group.add(screen1);
@@ -102,25 +133,24 @@ function createModernOfficeDesk(): THREE.Group {
   m1Group.add(base1);
 
   m1Group.position.set(-0.2, 1.05, 0.12);
-  m1Group.rotation.y = Math.PI; // Face forward
   desk.add(m1Group);
 
   // Monitor 2: Secondary Terminal
   const m2Group = m1Group.clone();
-  m2Group.position.set(0.48, 1.05, 0.18);
-  m2Group.rotation.y = Math.PI - 0.28;
+  m2Group.position.set(0.48, 1.05, 0.08);
+  m2Group.rotation.y = -0.25;
   desk.add(m2Group);
 
   // Keyboard and Mouse
   const kbGeo = new THREE.BoxGeometry(0.38, 0.012, 0.14);
   const kbMat = new THREE.MeshStandardMaterial({ color: 0x141824, roughness: 0.6 });
   const kb = new THREE.Mesh(kbGeo, kbMat);
-  kb.position.set(-0.15, 0.75, -0.16);
+  kb.position.set(-0.15, 0.75, 0.26);
   desk.add(kb);
 
   const mouseGeo = new THREE.BoxGeometry(0.05, 0.012, 0.08);
   const mouse = new THREE.Mesh(mouseGeo, kbMat);
-  mouse.position.set(0.18, 0.75, -0.16);
+  mouse.position.set(0.18, 0.75, 0.26);
   desk.add(mouse);
 
   return desk;
@@ -151,57 +181,57 @@ export async function createSimOfficeModel(loader: GLTFLoader): Promise<ModelIns
   const sceneGroup = new THREE.Group();
 
   // Solid Platform Slab
-  const slabGeo = new THREE.CylinderGeometry(1.95, 2.0, 0.08, 36);
+  const slabGeo = new THREE.CylinderGeometry(1.4, 1.45, 0.06, 36);
   const slabMat = new THREE.MeshStandardMaterial({
     color: 0x121626,
     roughness: 0.55,
     metalness: 0.2
   });
   const slabMesh = new THREE.Mesh(slabGeo, slabMat);
-  slabMesh.position.y = 0.04;
+  slabMesh.position.y = 0.03;
   sceneGroup.add(slabMesh);
 
   // Accent rim on platform edge
-  const rimGeo = new THREE.TorusGeometry(1.96, 0.012, 12, 48);
+  const rimGeo = new THREE.TorusGeometry(1.42, 0.012, 12, 48);
   const rimMat = new THREE.MeshBasicMaterial({ color: 0x5ee0ff });
   const rimMesh = new THREE.Mesh(rimGeo, rimMat);
   rimMesh.rotation.x = Math.PI / 2;
-  rimMesh.position.y = 0.08;
+  rimMesh.position.y = 0.06;
   sceneGroup.add(rimMesh);
 
   // Modern Office Workstation Desk
   const desk = createModernOfficeDesk();
-  desk.position.set(0.15, 0.08, 0.12);
+  desk.position.set(0.05, 0.06, -0.05);
   sceneGroup.add(desk);
 
-  // Office Chair
-  chair.scale.set(0.38, 0.38, 0.38);
-  chair.position.set(0.0, 0.08, -0.4);
-  chair.rotation.y = 0;
+  // Office Chair - neatly arranged beside workstation
+  chair.scale.set(0.42, 0.42, 0.42);
+  chair.position.set(-0.56, 0.06, 0.22);
+  chair.rotation.y = Math.PI * 0.85;
   sceneGroup.add(chair);
 
-  // Character 1 (Developer at workstation)
-  char1.scale.set(0.62, 0.62, 0.62);
-  char1.position.set(0.0, 0.08, -0.5);
-  char1.rotation.y = 0.15;
+  // Character 1 (Developer working and typing at workstation desk)
+  char1.scale.set(0.68, 0.68, 0.68);
+  char1.position.set(-0.12, 0.06, 0.44);
+  char1.rotation.y = Math.PI;
   sceneGroup.add(char1);
 
-  // Character 2 (Lead standing on the front left corner reviewing the screens)
-  char2.scale.set(0.62, 0.62, 0.62);
-  char2.position.set(-0.75, 0.08, 0.32);
-  char2.rotation.y = Math.PI * 0.35;
+  // Character 2 (Lead standing on the right reviewing the monitors)
+  char2.scale.set(0.68, 0.68, 0.68);
+  char2.position.set(0.72, 0.06, 0.15);
+  char2.rotation.y = -Math.PI * 0.45;
   sceneGroup.add(char2);
 
   // Ambient monitor screen glow
   const monitorGlow = new THREE.PointLight(0x5ee0ff, 1.2, 2.6);
-  monitorGlow.position.set(0.15, 1.2, 0.35);
+  monitorGlow.position.set(0.05, 1.15, 0.25);
   sceneGroup.add(monitorGlow);
 
   // Turn scene group slightly to cinematic 3/4 angle
-  sceneGroup.rotation.y = -Math.PI * 0.18;
+  sceneGroup.rotation.y = Math.PI * 0.12;
 
   // Normalize bounds
-  normalizeModelBounds(sceneGroup, 2.4);
+  normalizeModelBounds(sceneGroup, 2.2);
   root.add(sceneGroup);
 
   // Ground contact shadow

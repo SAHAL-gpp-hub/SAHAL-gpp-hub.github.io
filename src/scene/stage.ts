@@ -195,9 +195,9 @@ export class PortfolioStage {
 
     // Adapt camera framing for mobile vs desktop
     if (width < 860) {
-      this.cameraTargetPos.set(0, 1.6, 5.2);
+      this.cameraTargetPos.set(0, 1.55, 5.0);
     } else {
-      this.cameraTargetPos.set(0, 1.45, 4.4);
+      this.cameraTargetPos.set(0, 1.45, 4.75);
     }
 
     if (!this.isIntroActive) {
@@ -244,15 +244,11 @@ export class PortfolioStage {
       this.camera.lookAt(this.cameraLookTarget);
     }
 
-    // 2. Inertia drag rotation & idle drift
+    // 2. Inertia drag rotation (motion answers user action only)
     if (!this.isDragging) {
-      if (!this.reducedMotion) {
-        // Natural idle rotation
-        this.targetRotationY += delta * 0.12;
-      }
       // Damping on release velocity
-      this.velocityY *= 0.93;
-      this.velocityX *= 0.93;
+      this.velocityY *= 0.92;
+      this.velocityX *= 0.92;
       this.targetRotationY += this.velocityY;
       this.targetRotationX = Math.max(-0.25, Math.min(0.4, this.targetRotationX + this.velocityX));
     }

@@ -6,8 +6,8 @@ import { createContactShadowMesh } from '../scene/contactShadow.ts';
 
 function createDuplexSheet(): THREE.Group {
   const sheetGroup = new THREE.Group();
-  const width = 0.32;
-  const height = 0.44;
+  const width = 0.38;
+  const height = 0.50;
 
   // Front face canvas (white with clean document print lines)
   const frontCanvas = document.createElement('canvas');
@@ -77,22 +77,29 @@ export async function createBindPointModel(loader: GLTFLoader): Promise<ModelIns
   const printer = printerGltf.scene;
   applyCohesionPass(printer);
 
-  // Upgrade printer materials: clean sleek matte slate casing
+  // Upgrade printer materials: distinct casing, trays, and metallic highlights
   printer.traverse((child) => {
     if ((child as THREE.Mesh).isMesh) {
       const mesh = child as THREE.Mesh;
       mesh.geometry.deleteAttribute('color'); // Remove muddy vertex colors
       mesh.material = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(0x3a4258),
-        roughness: 0.45,
-        metalness: 0.35
+        color: new THREE.Color(0x323c52), // Sleek professional matte tech casing
+        roughness: 0.42,
+        metalness: 0.25
       });
     }
   });
 
+  const printerGroup = new THREE.Group();
+
   // Normalize printer bounds FIRST
   normalizeModelBounds(printer, 2.1);
-  root.add(printer);
+  printerGroup.add(printer);
+
+  // Printer control panel status light
+  const panelLight = new THREE.PointLight(0x8f8bff, 1.2, 2.0);
+  panelLight.position.set(0.35, 0.92, 0.35);
+  printerGroup.add(panelLight);
 
   // Paper path animation: 2 duplex sheets in staggered phases
   const sheets: { group: THREE.Group; progress: number }[] = [];
@@ -100,7 +107,7 @@ export async function createBindPointModel(loader: GLTFLoader): Promise<ModelIns
 
   for (let i = 0; i < numSheets; i++) {
     const sheet = createDuplexSheet();
-    root.add(sheet);
+    printerGroup.add(sheet);
     sheets.push({
       group: sheet,
       progress: i / numSheets
@@ -109,8 +116,12 @@ export async function createBindPointModel(loader: GLTFLoader): Promise<ModelIns
 
   // Accent light in printer output slot
   const trayLight = new THREE.PointLight(0x8f8bff, 1.4, 2.2);
-  trayLight.position.set(0, 0.95, 0.35);
-  root.add(trayLight);
+  trayLight.position.set(0, 0.92, -0.2);
+  printerGroup.add(trayLight);
+
+  // Rotate printer to dynamic 3/4 perspective
+  printerGroup.rotation.y = 0.38;
+  root.add(printerGroup);
 
   // Contact shadow
   const contactShadow = createContactShadowMesh(3.0, 0.85);
@@ -121,26 +132,31 @@ export async function createBindPointModel(loader: GLTFLoader): Promise<ModelIns
     update: (delta: number, _elapsed: number, reducedMotion: boolean) => {
       if (reducedMotion) {
         sheets.forEach((s, idx) => {
-          s.group.position.set(0, 0.88 + idx * 0.015, 0.35);
-          s.group.rotation.set(-Math.PI * 0.35, 0, 0);
+          if (idx === 0) {
+            s.group.position.set(0, 1.12, 0.32);
+            s.group.rotation.set(-Math.PI * 0.22, 0, 0);
+          } else {
+            s.group.position.set(0, 0.91, -0.42);
+            s.group.rotation.set(0.08, 0, 0);
+          }
         });
         return;
       }
 
-      // Animate duplex sheets emerging and flipping cleanly
+      // Animate duplex sheets emerging, flipping in mid-air, and landing into tray
       sheets.forEach((s) => {
         s.progress = (s.progress + delta * 0.32) % 1.0;
         const p = s.progress;
 
-        // Path: exits from slot, glides forward, flips over, lands into output tray
+        // Elevated path completely above printer casing
         const x = 0;
-        const y = 0.95 + Math.sin(p * Math.PI) * 0.28;
-        const z = -0.05 + p * 0.72;
+        const y = 1.06 + Math.sin(p * Math.PI) * 0.34 - p * 0.15;
+        const z = 0.35 - p * 0.85;
 
         s.group.position.set(x, y, z);
 
-        // Duplex flip animation: rotates smoothly around X axis from -0.25 rad to 180 deg
-        const flipRotation = -Math.PI * 0.25 + p * Math.PI;
+        // Duplex flip: rotates from feed angle to 180-deg flip to show duplex tinted back
+        const flipRotation = -Math.PI * 0.22 + p * Math.PI * 1.25;
         s.group.rotation.x = flipRotation;
         s.group.rotation.y = Math.sin(p * Math.PI * 2) * 0.04;
       });

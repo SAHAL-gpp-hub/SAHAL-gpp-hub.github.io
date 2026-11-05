@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { ModelInstance } from '../types.ts';
 import { createSimOfficeModel } from '../models/simOffice.ts';
 import { createLivingPlantModel } from '../models/livingPlant.ts';
@@ -23,6 +24,7 @@ export class ModelManager {
   constructor(scene: THREE.Object3D) {
     this.scene = scene;
     this.loader = new GLTFLoader();
+    this.loader.setMeshoptDecoder(MeshoptDecoder);
   }
 
   public async preloadFirst(projectId: string, onProgress?: (percent: number) => void): Promise<ModelInstance> {
@@ -126,15 +128,29 @@ export class ModelManager {
 
   private setModelOpacity(root: THREE.Object3D, opacity: number): void {
     root.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh;
-        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        materials.forEach((mat) => {
+      // Handle materials for Mesh, Points, Line, etc.
+      if ((child as any).material) {
+        const materials = Array.isArray((child as any).material)
+          ? (child as any).material
+          : [(child as any).material];
+        materials.forEach((mat: THREE.Material) => {
           if (mat) {
             mat.transparent = true;
             mat.opacity = opacity;
+            if ((mat as THREE.ShaderMaterial).uniforms?.uOpacity) {
+              (mat as THREE.ShaderMaterial).uniforms.uOpacity.value = opacity;
+            }
           }
         });
+      }
+
+      // Handle lights during cross-fade
+      if ((child as any).isLight) {
+        const light = child as THREE.Light;
+        if ((light as any)._baseIntensity === undefined) {
+          (light as any)._baseIntensity = light.intensity;
+        }
+        light.intensity = (light as any)._baseIntensity * opacity;
       }
     });
   }
