@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sahal Mansiya — Real data, real hardware, real-time 3D</title>
+    <meta name="description" content="Portfolio of Sahal Mansiya: interactive 3D in the browser, IoT digital twins, and production backends." />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;700&family=Instrument+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Left Content Column -->
+      <main class="content-panel">
+        <header class="header-block">
+          <p class="owner-name">Sahal Mansiya</p>
+          <h1 class="headline">Real data, real hardware, real-time 3D.</h1>
+          <p class="lead">I build interactive 3D in the browser, IoT digital twins and the production backends behind them.</p>
+        </header>
+
+        <!-- Project List Navigation -->
+        <nav class="project-nav" aria-label="Projects">
+          <ul class="project-list" id="project-list">
+            <!-- Dynamically populated or rendered with accessible buttons -->
+          </ul>
+        </nav>
+
+        <!-- Active Project Details Block -->
+        <section class="detail-block" id="project-detail" aria-live="polite">
+          <p class="detail-desc" id="detail-desc"></p>
+          <div class="detail-meta">
+            <div class="detail-tags" id="detail-tags"></div>
+            <a class="detail-link" id="detail-link" href="#" target="_blank" rel="noopener noreferrer">Source repository</a>
+          </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer-block">
+          <div class="footer-links">
+            <a class="footer-link" href="https://github.com/SAHAL-gpp-hub" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a class="footer-link" href="https://www.linkedin.com/in/sahal-mansiya-49abbb374/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a class="footer-link" href="mailto:manasiyasahal98@gmail.com">Email</a>
+            <button type="button" class="footer-btn" id="credits-trigger">Credits</button>
+          </div>
+          <p class="footer-location">Gujarat, India</p>
+        </footer>
+      </main>
+
+      <!-- Right 3D Stage Column -->
+      <section class="stage-panel" aria-label="3D Model Viewer">
+        <div id="stage-container"></div>
+        <div class="stage-hint" aria-hidden="true">Drag to rotate stage &middot; &larr; &rarr; to change project</div>
+      </section>
+    </div>
+
+    <!-- Accessible Credits Dialog -->
+    <dialog id="credits-dialog" aria-labelledby="credits-title">
+      <div class="dialog-header">
+        <h2 class="dialog-title" id="credits-title">3D Asset Credits</h2>
+        <button type="button" class="dialog-close" id="credits-close" aria-label="Close dialog">&times;</button>
+      </div>
+      <ul class="credits-list">
+        <li>
+          <strong>Poly Haven</strong> &mdash; Potsdamer Platz 1K Studio HDRI (<a href="https://polyhaven.com/a/potsdamer_platz" target="_blank" rel="noopener noreferrer">CC0 Public Domain</a>)
+        </li>
+        <li>
+          <strong>Quaternius</strong> &mdash; Modular Characters, Cyberpunk Workstation, Floor Slab, House Interior Assets, Campus Building (<a href="https://quaternius.com" target="_blank" rel="noopener noreferrer">CC0 Public Domain</a>)
+        </li>
+        <li>
+          <strong>floflixt / Low Poly Set</strong> &mdash; Office Printer Model (<a href="https://github.com/floflixt/doorway-experiment" target="_blank" rel="noopener noreferrer">CC-BY 4.0 / CC0</a>)
+        </li>
+        <li>
+          <strong>Threat Matrix Visualizer</strong> &mdash; Custom GLSL point cloud shader by Sahal Mansiya (<a href="https://github.com/SAHAL-gpp-hub/threatwatch-prototype" target="_blank" rel="noopener noreferrer">MIT / CC0</a>)
+        </li>
+      </ul>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
